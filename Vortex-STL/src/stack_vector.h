@@ -1,13 +1,13 @@
 #pragma once
 
-#include <cstdint>
-#include <memory>
 #include <iterator>
+#include <cstdint>
 #include <cstddef>
+#include <memory>
 
 namespace vstl {
 
-	// Scoped Stack Vector
+	// Scoped Vector
 	template <typename T>
 	class stack_vector
 	{
@@ -78,7 +78,7 @@ namespace vstl {
 			pointer_type operator->() const { return m_Ptr; }
 
 			// prefix
-			const_iterator& operator++() const
+			const const_iterator& operator++() const
 			{
 				m_Ptr++;
 				return *this;
@@ -103,7 +103,7 @@ namespace vstl {
 			}
 
 		private:
-			pointer_type m_Ptr = nullptr;
+			mutable pointer_type m_Ptr = nullptr;
 		};
 
 		struct reverse_iterator
@@ -135,7 +135,7 @@ namespace vstl {
 			reverse_iterator operator++(int index)
 			{
 				reverse_iterator temp = *this;
-				--(*this);
+				++(*this);
 				return temp;
 			}
 
@@ -172,7 +172,7 @@ namespace vstl {
 			pointer_type operator->() const { return m_Ptr; }
 
 			// prefix
-			const_reverse_iterator& operator++() const
+			const const_reverse_iterator& operator++() const
 			{
 				m_Ptr--;
 				return *this;
@@ -182,7 +182,7 @@ namespace vstl {
 			const_reverse_iterator operator++(int index) const
 			{
 				const_reverse_iterator temp = *this;
-				--(*this);
+				++(*this);
 				return temp;
 			}
 
@@ -197,7 +197,7 @@ namespace vstl {
 			}
 
 		private:
-			pointer_type m_Ptr = nullptr;
+			mutable pointer_type m_Ptr = nullptr;
 		};
 
 	public:
@@ -210,11 +210,36 @@ namespace vstl {
 		stack_vector(uint32_t count, const T& value)
 		{
 			Resize(count);
-
-			for (uint32_t i = 0; i < m_Capacity; i++)
+			
+			for (uint32_t i = 0; i < count; i++)
 				m_Data[i] = value;
 
 			m_Size = m_Capacity;
+		}
+
+		stack_vector(const std::initializer_list<T>& list)
+		{
+			Resize(list.size());
+
+			uint32_t i = 0;
+			for (const auto& element : list)
+				m_Data[i++] = element;
+
+			m_Size = list.size();
+		}
+
+		stack_vector(stack_vector<T>&& other)
+		{
+			Resize(other.m_Size);
+			m_Data = std::move(other.m_Data);
+			m_Size = other.m_Size;
+		}
+
+		stack_vector(const stack_vector<T>& other)
+		{
+			Resize(other.m_Size);
+			memcpy((void*)m_Data, (void*)other.m_Data, other.m_Size * sizeof(T));
+			m_Size = other.m_Size;
 		}
 
 		~stack_vector()
@@ -266,9 +291,8 @@ namespace vstl {
 
 		void Clear()
 		{
-			for (uint32_t i = 0; i < m_Size; i++)
-				m_Data[i] = T();
-
+			T _default = T();
+			memcpy((void*)m_Data, (void*)&_default, m_Size * sizeof(T));
 			m_Size = 0;
 		}
 
@@ -276,7 +300,7 @@ namespace vstl {
 		{
 			return &m_Data[0];
 		}
-		T* Data() const
+		const T* Data() const
 		{
 			return &m_Data[0];
 		}
@@ -285,31 +309,37 @@ namespace vstl {
 		{
 			return m_Data[index];
 		}
+		const T& operator[](uint32_t index) const
+		{
+			return m_Data[index];
+		}
 
 		iterator begin() { return iterator(&m_Data[0]); }
 		iterator end() { return iterator(&m_Data[m_Size]); }
+		iterator begin() const { return iterator(&m_Data[0]); }
+		iterator end() const { return iterator(&m_Data[m_Size]); }
 
 		const_iterator cbegin() const { return const_iterator(&m_Data[0]); }
 		const_iterator cend() const { return const_iterator(&m_Data[m_Size]); }
+		const_reverse_iterator crbegin() const { return const_reverse_iterator(&m_Data[m_Size - 1]); }
+		const_reverse_iterator crend() const { return const_reverse_iterator(&m_Data[0] - 1); }
 
-		reverse_iterator rbegin() { return reverse_iterator(&m_Data[m_Size]); }
-		reverse_iterator rend() { return reverse_iterator(&m_Data[0]); }
-
-		const_reverse_iterator crbegin() const { return const_reverse_iterator(&m_Data[m_Size]); }
-		const_reverse_iterator crend() const { return const_reverse_iterator(&m_Data[0]); }
+		reverse_iterator rbegin() { return reverse_iterator(&m_Data[m_Size - 1]); }
+		reverse_iterator rend() { return reverse_iterator(&m_Data[0] - 1); }
+		reverse_iterator rbegin() const { return reverse_iterator(&m_Data[m_Size - 1]); }
+		reverse_iterator rend() const { return reverse_iterator(&m_Data[0] - 1); }
 
 	private:
 		void ReAlloc(uint32_t newSize)
 		{
 			uint32_t originalSize = m_Size;
 			T* temp = new T[originalSize]();
-			memcpy(temp, m_Data, originalSize * sizeof(T));
+			memcpy((void*)temp, (void*)m_Data, originalSize * sizeof(T));
 
 			delete[] m_Data;
 
 			m_Data = new T[newSize]();
-			for (uint32_t i = 0; i < originalSize; i++)
-				m_Data[i] = temp[i];
+			memcpy((void*)m_Data, (void*)temp, originalSize * sizeof(T));
 
 			delete[] temp;
 		}
