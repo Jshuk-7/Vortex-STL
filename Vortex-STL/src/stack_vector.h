@@ -45,6 +45,9 @@ namespace vstl {
 				return temp;
 			}
 
+			uint32_t operator+(const iterator& other) { return m_Ptr + other.m_Ptr; }
+			uint32_t operator-(const iterator& other) { return m_Ptr - other.m_Ptr; }
+
 			friend bool operator==(const iterator& lhs, const iterator& rhs)
 			{
 				return lhs.m_Ptr == rhs.m_Ptr;

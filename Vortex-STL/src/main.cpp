@@ -1,5 +1,6 @@
 #include "stack_vector.h"
 #include "stack_array.h"
+#include "hash_table.h"
 
 #include <iostream>
 #include <vector>
@@ -89,7 +90,21 @@ int main()
 	StructTest();
 	std::cout << std::endl;
 
-	vstl::stack_array<int, 3> arr(1);
+	struct Vec3
+	{
+		float X, Y, Z;
+	};
+
+	struct Entity
+	{
+		std::string Name;
+		Vec3 Translation;
+	};
+
+	vstl::hash_table<uint32_t, Entity> hashTable;
+	hashTable.Insert(1, Entity{ "Jackson", {0, 1, 0} });
+
+	Entity& entity = hashTable[1];
 
 	std::cin.get();
 	return 0;
