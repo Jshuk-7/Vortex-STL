@@ -1,5 +1,6 @@
 #include "stack_vector.h"
 #include "stack_array.h"
+#include "linked_list.h"
 #include "hash_table.h"
 
 #include <iostream>
@@ -83,28 +84,17 @@ void StructTest()
 
 int main()
 {
-	PushBackTest();
-	std::cout << std::endl;
-	InitializerListTest();
-	std::cout << std::endl;
-	StructTest();
-	std::cout << std::endl;
+	vstl::linked_list<int> list;
 
-	struct Vec3
 	{
-		float X, Y, Z;
-	};
+		Timer timer("linked_list");
+		for (uint32_t i = 0; i < 5'000; i++)
+			list.Add(i);
+	}
 
-	struct Entity
-	{
-		std::string Name;
-		Vec3 Translation;
-	};
+	std::cout << "Size: " << list.Size() << '\n';
 
-	vstl::hash_table<uint32_t, Entity> hashTable;
-	hashTable.Insert(1, Entity{ "Jackson", {0, 1, 0} });
-
-	Entity& entity = hashTable[1];
+	list.ForEach([](int& n) { std::cout << n << '\n'; });
 
 	std::cin.get();
 	return 0;
